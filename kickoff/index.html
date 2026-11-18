@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kickoff Pulso — Clínicas</title>
+<meta name="robots" content="noindex">
+<style>
+:root{--navy:#14263f;--teal:#2ec4c9;--bg:#f3eee6;--card:#fff;--txt:#1d2a3a;--muted:#6b7684;--line:#e6e1d8;--warn:#e0a648}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--txt)}
+header{background:var(--navy);color:#fff;padding:28px 20px}
+header .wrap{max-width:820px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:12px}
+header h1{margin:0;font-size:24px}
+header p{margin:4px 0 0;color:#b9c4d2;font-size:14px}
+.pill{border:2px solid var(--teal);color:var(--teal);border-radius:999px;padding:6px 14px;font-weight:600;font-size:13px;white-space:nowrap}
+main{max-width:820px;margin:auto;padding:20px}
+.progress{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin:6px 0 4px}
+.progress div{height:100%;background:var(--teal);width:0;transition:width .3s}
+.steplabel{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:14px 0}
+.card{background:var(--card);border-radius:18px;padding:24px;box-shadow:0 1px 0 rgba(0,0,0,.04)}
+.card h2{margin:0 0 4px;font-size:21px}
+.card .why{margin:0 0 18px;color:var(--muted);font-size:14px}
+.q{margin:18px 0}
+.q label.t{display:block;font-weight:600;margin-bottom:6px}
+.q .h{font-size:13px;color:var(--muted);margin:-2px 0 8px}
+input[type=text],input[type=email],input[type=tel],input[type=number],textarea,select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fbfaf7}
+textarea{min-height:80px;resize:vertical}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:#fbfaf7;border-radius:999px;padding:8px 13px;cursor:pointer;font-size:14px;user-select:none}
+.chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.chip .n{display:inline-block;background:var(--teal);color:var(--navy);border-radius:999px;font-size:11px;font-weight:700;padding:0 6px;margin-left:6px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:620px){.row{grid-template-columns:1fr}header h1{font-size:20px}}
+.nav{display:flex;justify-content:space-between;margin-top:20px;gap:10px}
+button{font:inherit;border:0;border-radius:12px;padding:12px 20px;cursor:pointer;font-weight:600}
+.prim{background:var(--teal);color:var(--navy)}
+.sec{background:transparent;color:var(--navy);border:1px solid var(--navy)}
+.req{color:#c0392b}
+.err{color:#c0392b;font-size:13px;margin-top:8px;display:none}
+.plan{background:var(--navy);color:#fff;border-radius:18px;padding:24px;margin-top:16px}
+.plan h3{margin:0 0 12px;color:var(--teal);letter-spacing:.1em;text-transform:uppercase;font-size:13px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.kpi{background:rgba(255,255,255,.07);border-radius:12px;padding:14px}
+.kpi b{display:block;font-size:24px}
+.kpi span{font-size:12px;color:#b9c4d2}
+@media(max-width:620px){.kpis{grid-template-columns:1fr}}
+.small{font-size:12px;color:var(--muted)}
+.ok{background:#e6f7f7;border-radius:12px;padding:14px;margin-top:14px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div><h1>Kickoff da sua clínica</h1><p>Leva ~12 minutos. Cada resposta vira uma decisão da sua estratégia.</p></div>
+  <div class="pill">Pulso Marketing</div>
+</div></header>
+<main>
+  <div class="progress"><div id="bar"></div></div>
+  <div class="steplabel" id="steplabel"></div>
+  <form id="f" class="card" onsubmit="return false"></form>
+  <div id="fim"></div>
+  <p class="small">Suas respostas são usadas apenas pela equipe da Pulso Marketing para planejar suas campanhas.
+    <a href="../privacidade.html">Política de Privacidade</a>.</p>
+</main>
+<script>
+/* Endereço que recebe as respostas (Google Apps Script ligado a uma planilha).
+   Enquanto vazio, o formulário mostra o resumo para copiar e enviar pelo WhatsApp. */
+const ENDPOINT = "";
+const WHATSAPP_PULSO = ""; // ex.: "5561999999999"
+
+const REG = ["Plano Piloto (Asa Sul/Norte)","Lago Sul/Norte","Sudoeste/Noroeste","Águas Claras","Taguatinga","Ceilândia","Samambaia","Guará","Vicente Pires","Arniqueira","Park Way","Núcleo Bandeirante","Riacho Fundo","Jardim Botânico","Sobradinho","Gama","Santa Maria","Planaltina","Valparaíso/Entorno GO","Todo o DF"];
+const AREAS = ["Joelho","Coluna","Ombro","Quadril","Pé e tornozelo","Mão e punho","Dor crônica","Infiltração/bloqueio","Cirurgia","Medicina esportiva","Artrose","Fraturas/trauma","Ortopedia regenerativa (PRP etc.)","Ondas de choque","2ª opinião cirúrgica"];
+const CONV = ["Atendo só particular","GEAP","CASSI","Bradesco Saúde","SulAmérica","Amil","Unimed","GDF Saúde/INAS","Plan Assiste (MPU)","E-vida","Notre Dame/Hapvida","PMDF","CBMDF","Postal Saúde","Fascal","Saúde Caixa","Omint","Porto Saúde","Outros (descrevo abaixo)"];
+
+const STEPS = [
+ {t:"Você e a clínica", why:"Para falarmos certo com o paciente e com quem decide.", qs:[
+  {id:"medico",t:"Nome do médico como o paciente conhece",type:"text",req:1},
+  {id:"clinica",t:"Nome da clínica (se houver)",type:"text"},
+  {id:"especialidade",t:"Especialidade",type:"text",req:1,ph:"Ex.: Ortopedia e Traumatologia"},
+  {row:[{id:"crm",t:"CRM",type:"text"},{id:"rqe",t:"RQE",type:"text"}]},
+  {row:[{id:"decisor",t:"Quem decide sobre marketing",type:"text",req:1,ph:"Nome"},{id:"decisor_whats",t:"WhatsApp de quem decide",type:"tel",req:1}]},
+  {id:"email",t:"E-mail para relatórios",type:"email",req:1},
+ ]},
+ {t:"Onde você atende", why:"Define o raio dos anúncios: anunciar onde o paciente não vai é dinheiro perdido.", qs:[
+  {id:"unidades",t:"Unidades de atendimento",type:"textarea",req:1,h:"Uma por linha: nome · endereço/bairro · dias e horários",ph:"Clínica X · Asa Sul, SGAS 915 · seg e qua 8h-18h"},
+  {id:"regioes",t:"De quais regiões você QUER receber pacientes?",type:"chips",opts:REG,multi:1,req:1},
+  {id:"deslocamento",t:"Até quanto tempo o seu paciente costuma se deslocar?",type:"chips",opts:["Até 15 min","Até 30 min","Até 45 min","Vem de qualquer lugar do DF"],req:1},
+ ]},
+ {t:"O que você quer atrair", why:"É aqui que separamos campanhas e páginas por área — cada área tem custo e retorno diferentes.", qs:[
+  {id:"areas",t:"Escolha até 3 áreas/procedimentos prioritários, na ordem de importância",type:"rank",opts:AREAS,max:3,req:1,h:"Clique na ordem: 1º, 2º, 3º"},
+  {id:"alto_valor",t:"Quais procedimentos dão mais retorno para a clínica? (e valor aproximado)",type:"textarea",ph:"Ex.: artroscopia de joelho ~R$ 15 mil; infiltração ~R$ 900"},
+  {id:"nao_atende",t:"O que você NÃO quer atrair ou não atende?",type:"textarea",h:"Vira filtro e palavra negativa nas campanhas",ph:"Ex.: crianças, perícia, SUS, fisioterapia, coluna cirúrgica"},
+ ]},
+ {t:"Particular e convênio", why:"Muda a mensagem dos anúncios e quanto vale cada paciente.", qs:[
+  {id:"valor_consulta",t:"Valor da consulta particular (R$)",type:"number",req:1},
+  {id:"convenios",t:"Convênios que você atende",type:"chips",opts:CONV,multi:1,req:1},
+  {id:"convenios_outros",t:"Outros convênios / observações",type:"text"},
+  {id:"mix",t:"O que você prefere atrair?",type:"chips",opts:["Mais particular","Mais convênio","Equilíbrio","Tanto faz"],req:1},
+ ]},
+ {t:"Seu paciente", why:"Com isso escrevemos anúncios que falam a língua de quem agenda — e escolhemos o público no Meta.", qs:[
+  {id:"idade",t:"Faixa etária predominante",type:"chips",opts:["18-30","30-45","45-60","60+"],multi:1},
+  {id:"perfil",t:"Perfil mais comum",type:"chips",opts:["Esportistas","Trabalhador com dor/lesão","Idosos/artrose","Servidores públicos","Pós-cirúrgico/2ª opinião","Alta renda","Crianças/adolescentes"],multi:1},
+  {id:"duvidas",t:"Quais as 3 perguntas que o paciente mais faz antes de agendar?",type:"textarea",ph:"Ex.: atende meu convênio? quanto custa? precisa de cirurgia?"},
+  {id:"diferenciais",t:"Por que os pacientes escolhem você e não outro ortopedista?",type:"textarea",req:1,h:"Formação, tempo de consulta, tecnologia, localização, resultados…"},
+  {id:"concorrentes",t:"Quem são seus concorrentes diretos na região?",type:"text"},
+ ]},
+ {t:"Agenda e metas", why:"Sem meta não existe 'bom resultado'. Daqui sai o custo máximo por paciente.", qs:[
+  {row:[{id:"vagas_semana",t:"Vagas para pacientes NOVOS por semana",type:"number",req:1},{id:"espera_dias",t:"Em quantos dias sai a próxima vaga hoje?",type:"number"}]},
+  {id:"meta_pacientes",t:"Quantos pacientes novos por mês você quer pelos anúncios?",type:"number",req:1},
+  {id:"vale_pagar",t:"Quanto você aceitaria investir em anúncio para conquistar 1 paciente novo? (R$)",type:"number",req:1,h:"Pense no que esse paciente deixa na clínica ao longo do tratamento"},
+  {id:"ticket_tratamento",t:"Quanto um paciente novo deixa, em média, ao longo do tratamento? (R$)",type:"number",h:"Consultas, retornos, procedimentos. Uma estimativa já ajuda."},
+  {id:"sazonalidade",t:"Meses ou dias mais fracos/fortes",type:"text"},
+ ]},
+ {t:"Atendimento no WhatsApp", why:"O anúncio traz o contato; o atendimento transforma em consulta. É o ponto que mais muda o resultado.", qs:[
+  {id:"atendente",t:"Quem responde o WhatsApp?",type:"chips",opts:["Secretária","O próprio médico","Central da clínica","Empresa terceirizada"],req:1},
+  {id:"horario_resposta",t:"Em quais horários alguém responde?",type:"text",req:1,ph:"Ex.: seg a sex 8h-18h, sáb 8h-12h"},
+  {id:"tempo_resposta",t:"Em quanto tempo o paciente costuma ter resposta?",type:"chips",opts:["Até 5 min","Até 30 min","Até 2 h","No mesmo dia","Às vezes no dia seguinte"],req:1},
+  {id:"agenda_sistema",t:"Onde a agenda é controlada?",type:"chips",opts:["Feegow","iClinic","Doctoralia","Ninsaúde","Clinicorp","Planilha","Papel/caderno","Outro"]},
+  {id:"taxa_agendamento",t:"De cada 10 pessoas que chamam, quantas agendam (estimativa)?",type:"number",req:1},
+  {id:"faltas",t:"De cada 10 agendados, quantos faltam?",type:"number"},
+  {id:"crm_ok",t:"A secretária pode marcar em uma planilha/CRM quem agendou e quem compareceu?",type:"chips",opts:["Sim","Sim, com treinamento","Não consigo"],req:1,h:"É o que nos permite otimizar por PACIENTE, não só por contato"},
+ ]},
+ {t:"Investimento e acessos", why:"Para começar sem atraso no lançamento.", qs:[
+  {id:"verba",t:"Verba mensal para anúncios (R$, fora a gestão)",type:"number",req:1},
+  {id:"pagamento",t:"Como prefere pagar as plataformas?",type:"chips",opts:["Cartão","PIX","Boleto"],req:1},
+  {id:"acessos",t:"O que você JÁ tem?",type:"chips",multi:1,opts:["Conta Google Ads","Gerenciador de Anúncios (Meta)","Perfil no Google (Meu Negócio)","Site próprio","Instagram profissional","WhatsApp Business","Domínio (site .com.br)"]},
+  {row:[{id:"google_ads_id",t:"ID da conta Google Ads (se souber)",type:"text",ph:"000-000-0000"},{id:"meta_ads_id",t:"ID da conta de anúncios Meta (se souber)",type:"text",ph:"act_..."}]},
+  {id:"site",t:"Site ou página atual",type:"text",ph:"www.seusite.com.br"},
+  {id:"instagram",t:"Instagram",type:"text",ph:"@seuperfil"},
+  {id:"aprovador",t:"Quem aprova anúncios e páginas antes de publicar?",type:"text",req:1},
+ ]},
+ {t:"Marca e limites", why:"Saúde tem regras (CFM, Google, Meta). Combinamos o tom e o que nunca dizer.", qs:[
+  {id:"tom",t:"Como você quer ser percebido?",type:"chips",multi:1,opts:["Acolhedor","Técnico/especialista","Moderno/tecnológico","Experiente/referência","Próximo e acessível","Premium"]},
+  {id:"nunca",t:"O que você NÃO quer que apareça nos anúncios?",type:"textarea",ph:"Ex.: preço, 'sem cirurgia', fotos de procedimentos"},
+  {id:"materiais",t:"Materiais disponíveis",type:"chips",multi:1,opts:["Fotos profissionais","Vídeos","Logo","Grava vídeos para redes","Nenhum ainda"]},
+ ]},
+ {t:"Histórico", why:"Evita repetir o que já não funcionou.", qs:[
+  {id:"ja_anunciou",t:"Já anunciou no Google ou Instagram?",type:"chips",opts:["Nunca","Sim, sozinho","Sim, com agência","Sim, comigo hoje"],req:1},
+  {id:"historico",t:"Quanto investia, o que funcionou e o que não funcionou?",type:"textarea"},
+  {id:"problemas",t:"Já teve conta suspensa ou anúncio reprovado?",type:"chips",opts:["Não","Sim","Não sei"]},
+  {id:"obs",t:"Algo mais que devemos saber?",type:"textarea"},
+ ]},
+];
+
+const data = JSON.parse(localStorage.getItem("kickoff_pulso")||"{}");
+let step = 0;
+const f = document.getElementById("f");
+const save = () => localStorage.setItem("kickoff_pulso", JSON.stringify(data));
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function field(q){
+  const lab = `<label class="t" for="${q.id}">${q.t}${q.req?' <span class="req">*</span>':''}</label>${q.h?`<div class="h">${q.h}</div>`:''}`;
+  const v = data[q.id];
+  if(q.type==="textarea") return `<div class="q">${lab}<textarea id="${q.id}" placeholder="${esc(q.ph||'')}">${esc(v)}</textarea></div>`;
+  if(q.type==="chips"||q.type==="rank"){
+    const sel = Array.isArray(v)?v:(v?[v]:[]);
+    return `<div class="q">${lab}<div class="chips" data-id="${q.id}">`+q.opts.map(o=>{
+      const i = sel.indexOf(o);
+      return `<span class="chip${i>=0?' on':''}" data-v="${esc(o)}">${esc(o)}${q.type==="rank"&&i>=0?`<span class="n">${i+1}º</span>`:''}</span>`}).join("")+`</div></div>`;
+  }
+  return `<div class="q">${lab}<input id="${q.id}" type="${q.type}" value="${esc(v)}" placeholder="${esc(q.ph||'')}" ${q.type==="number"?'min="0" inputmode="decimal"':''}></div>`;
+}
+const flat = qs => qs.flatMap(q=>q.row?q.row:[q]);
+
+function render(){
+  const s = STEPS[step];
+  document.getElementById("bar").style.width = (step/STEPS.length*100)+"%";
+  document.getElementById("steplabel").textContent = `Etapa ${step+1} de ${STEPS.length}`;
+  f.innerHTML = `<h2>${s.t}</h2><p class="why">${s.why}</p>` +
+    s.qs.map(q=>q.row?`<div class="row">${q.row.map(field).join("")}</div>`:field(q)).join("") +
+    `<div class="err" id="err">Preencha os campos marcados com *.</div>
+     <div class="nav">${step?'<button class="sec" id="voltar">Voltar</button>':'<span></span>'}
+     <button class="prim" id="ir">${step===STEPS.length-1?'Ver meu plano e enviar':'Continuar'}</button></div>`;
+  f.querySelectorAll(".chips").forEach(box=>{
+    const q = flat(s.qs).find(x=>x.id===box.dataset.id);
+    box.onclick = e=>{
+      const c = e.target.closest(".chip"); if(!c) return;
+      const o = c.dataset.v;
+      if(q.multi||q.type==="rank"){
+        let a = Array.isArray(data[q.id])?data[q.id]:[];
+        a = a.includes(o)?a.filter(x=>x!==o):(q.max&&a.length>=q.max?a:[...a,o]);
+        data[q.id]=a;
+      } else data[q.id] = data[q.id]===o?"":o;
+      save(); render();
+    };
+  });
+  f.querySelectorAll("input,textarea").forEach(el=>el.oninput=()=>{data[el.id]=el.value;save()});
+  const v = document.getElementById("voltar"); if(v) v.onclick=()=>{step--;render();scrollTo(0,0)};
+  document.getElementById("ir").onclick=()=>{
+    const falta = flat(s.qs).filter(q=>q.req&&!(Array.isArray(data[q.id])?data[q.id].length:String(data[q.id]||"").trim()));
+    if(falta.length){document.getElementById("err").style.display="block";return}
+    if(step<STEPS.length-1){step++;render();scrollTo(0,0)} else finalizar();
+  };
+}
+
+const num = x => parseFloat(String(x||"").replace(",", ".")) || 0;
+const brl = x => x.toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0});
+
+function plano(){
+  const taxa = Math.min(Math.max(num(data.taxa_agendamento),0.5),10)/10;
+  const comparece = 1 - Math.min(num(data.faltas),9)/10;
+  const meta = num(data.meta_pacientes);
+  const capacidade = num(data.vagas_semana)*4.3;
+  const pacientes = capacidade? Math.min(meta,capacidade): meta;
+  const contatos = Math.ceil(pacientes/(taxa*comparece));
+  const cpcMax = num(data.vale_pagar)*taxa*comparece;
+  const verbaNec = contatos*cpcMax;
+  return {taxa,comparece,meta,capacidade,pacientes,contatos,cpcMax,verbaNec,verba:num(data.verba)};
+}
+
+async function finalizar(){
+  document.getElementById("bar").style.width="100%";
+  const p = plano();
+  const alertaCap = p.capacidade && p.meta>p.capacidade ? `<p>⚠️ Sua meta (${p.meta}) é maior que a agenda comporta (~${Math.round(p.capacidade)} vagas/mês). Planejamos pelo que cabe na agenda.</p>`:"";
+  const alertaVerba = p.verba && p.verbaNec>p.verba*1.15 ? `<p>⚠️ Para essa meta, a verba estimada (${brl(p.verbaNec)}) é maior que a informada (${brl(p.verba)}). Vamos priorizar as áreas mais baratas primeiro.</p>`:"";
+  f.innerHTML = `<h2>Obrigado, ${esc(data.medico||"")}! 🎉</h2><p class="why">Este é o ponto de partida da sua estratégia — vamos refinar juntos no kickoff.</p>`;
+  document.getElementById("fim").innerHTML = `<div class="plan"><h3>Seu plano inicial</h3>
+   <div class="kpis">
+     <div class="kpi"><b>${Math.round(p.pacientes)}</b><span>pacientes novos/mês (meta)</span></div>
+     <div class="kpi"><b>${p.contatos}</b><span>contatos/mês necessários (agenda ${Math.round(p.taxa*10)}/10, comparecem ${Math.round(p.comparece*10)}/10)</span></div>
+     <div class="kpi"><b>${brl(p.cpcMax)}</b><span>custo máximo por contato para valer a pena</span></div>
+   </div>${alertaCap}${alertaVerba}
+   <p class="small" style="color:#b9c4d2">Áreas prioritárias: ${esc((data.areas||[]).join(" → "))}</p></div>
+   <div class="card" style="margin-top:16px" id="envio">Enviando…</div>`;
+  const payload = {...data, _plano:p, _enviado_em:new Date().toISOString()};
+  const env = document.getElementById("envio");
+  if(ENDPOINT){
+    try{
+      await fetch(ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify(payload)});
+      env.innerHTML = `<div class="ok">✅ Respostas enviadas para a equipe Pulso. Em breve falamos com você.</div>`;
+      localStorage.removeItem("kickoff_pulso"); return;
+    }catch(e){}
+  }
+  const resumo = STEPS.flatMap(s=>[`*${s.t}*`, ...flat(s.qs).map(q=>`${q.t}: ${Array.isArray(data[q.id])?data[q.id].join(", "):(data[q.id]||"-")}`),""]).join("\n")
+    + `\n*Plano inicial*: ${Math.round(p.pacientes)} pacientes/mês · ${p.contatos} contatos/mês · até ${brl(p.cpcMax)} por contato`;
+  env.innerHTML = `<p>Envie suas respostas para a equipe Pulso:</p>
+    <div class="nav" style="justify-content:flex-start">
+    ${WHATSAPP_PULSO?`<a class="prim" style="text-decoration:none;padding:12px 20px;border-radius:12px;background:var(--teal);color:var(--navy);font-weight:600" href="https://wa.me/${WHATSAPP_PULSO}?text=${encodeURIComponent(resumo)}" target="_blank" rel="noopener">Enviar pelo WhatsApp</a>`:''}
+    <button class="sec" id="copiar">Copiar respostas</button></div>`;
+  document.getElementById("copiar").onclick=async()=>{await navigator.clipboard.writeText(resumo);document.getElementById("copiar").textContent="Copiado ✓"};
+}
+render();
+</script>
+</body>
+</html>
