@@ -116,8 +116,8 @@ const STEPS = [
   {id:"horario_resposta",t:"Em quais horários alguém responde?",type:"text",req:1,ph:"Ex.: seg a sex 8h-18h, sáb 8h-12h"},
   {id:"tempo_resposta",t:"Em quanto tempo o paciente costuma ter resposta?",type:"chips",opts:["Até 5 min","Até 30 min","Até 2 h","No mesmo dia","Às vezes no dia seguinte"],req:1},
   {id:"agenda_sistema",t:"Onde a agenda é controlada?",type:"chips",opts:["Feegow","iClinic","Doctoralia","Ninsaúde","Clinicorp","Planilha","Papel/caderno","Outro"]},
-  {id:"taxa_agendamento",t:"De cada 10 pessoas que chamam, quantas agendam (estimativa)?",type:"number",req:1},
-  {id:"faltas",t:"De cada 10 agendados, quantos faltam?",type:"number"},
+  {id:"taxa_agendamento",t:"De cada 10 pessoas que chamam, quantas agendam (estimativa)?",type:"number",req:1,lim:10},
+  {id:"faltas",t:"De cada 10 agendados, quantos faltam?",type:"number",lim:10},
   {id:"crm_ok",t:"A secretária pode marcar em uma planilha/CRM quem agendou e quem compareceu?",type:"chips",opts:["Sim","Sim, com treinamento","Não consigo"],req:1,h:"É o que nos permite otimizar por PACIENTE, não só por contato"},
  ]},
  {t:"Investimento e acessos", why:"Para começar sem atraso no lançamento.", qs:[
@@ -158,7 +158,7 @@ function field(q){
       const i = sel.indexOf(o);
       return `<span class="chip${i>=0?' on':''}" data-v="${esc(o)}">${esc(o)}${q.type==="rank"&&i>=0?`<span class="n">${i+1}º</span>`:''}</span>`}).join("")+`</div></div>`;
   }
-  return `<div class="q">${lab}<input id="${q.id}" type="${q.type}" value="${esc(v)}" placeholder="${esc(q.ph||'')}" ${q.type==="number"?'min="0" inputmode="decimal"':''}></div>`;
+  return `<div class="q">${lab}<input id="${q.id}" type="${q.type}" value="${esc(v)}" placeholder="${esc(q.ph||'')}" ${q.type==="number"?`min="0" ${q.lim?`max="${q.lim}"`:''} inputmode="decimal"`:''}></div>`;
 }
 const flat = qs => qs.flatMap(q=>q.row?q.row:[q]);
 
@@ -188,7 +188,8 @@ function render(){
   const v = document.getElementById("voltar"); if(v) v.onclick=()=>{step--;render();scrollTo(0,0)};
   document.getElementById("ir").onclick=()=>{
     const falta = flat(s.qs).filter(q=>q.req&&!(Array.isArray(data[q.id])?data[q.id].length:String(data[q.id]||"").trim()));
-    if(falta.length){document.getElementById("err").style.display="block";return}
+    const foraLimite = flat(s.qs).filter(q=>q.lim && String(data[q.id]||"").trim() && (num(data[q.id])<0 || num(data[q.id])>q.lim));
+    if(falta.length||foraLimite.length){const e=document.getElementById("err");e.textContent=falta.length?"Preencha os campos marcados com *.":"Use um número de 0 a 10 em: "+foraLimite.map(q=>q.t).join("; ");e.style.display="block";return}
     if(step<STEPS.length-1){step++;render();scrollTo(0,0)} else finalizar();
   };
 }
