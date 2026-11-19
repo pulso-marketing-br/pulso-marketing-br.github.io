@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kickoff Pulso — Clínicas</title>
+<title>Kickoff Pulso — Clínicas e consultórios</title>
 <meta name="robots" content="noindex">
 <style>
 :root{--navy:#14263f;--teal:#2ec4c9;--bg:#f3eee6;--card:#fff;--txt:#1d2a3a;--muted:#6b7684;--line:#e6e1d8;--warn:#e0a648}
@@ -68,9 +68,9 @@ button{font:inherit;border:0;border-radius:12px;padding:12px 20px;cursor:pointer
 const ENDPOINT = "https://script.google.com/macros/s/AKfycbyP3Do-tuFF-ahcPHLVhFmzmS1Zd2O6HI3-wZYXFAX7IdQLrWNE61Htevj-zy9I4kEoIg/exec";
 const WHATSAPP_PULSO = ""; // ex.: "5561999999999"
 
-const REG = ["Plano Piloto (Asa Sul/Norte)","Lago Sul/Norte","Sudoeste/Noroeste","Águas Claras","Taguatinga","Ceilândia","Samambaia","Guará","Vicente Pires","Arniqueira","Park Way","Núcleo Bandeirante","Riacho Fundo","Jardim Botânico","Sobradinho","Gama","Santa Maria","Planaltina","Valparaíso/Entorno GO","Todo o DF"];
+const ALCANCE = ["Só os bairros próximos à clínica","A cidade toda","Cidade + região metropolitana","O estado inteiro","Outras cidades/estados (paciente viaja ou telemedicina)"];
 const AREAS = ["Joelho","Coluna","Ombro","Quadril","Pé e tornozelo","Mão e punho","Dor crônica","Infiltração/bloqueio","Cirurgia","Medicina esportiva","Artrose","Fraturas/trauma","Ortopedia regenerativa (PRP etc.)","Ondas de choque","2ª opinião cirúrgica"];
-const CONV = ["Atendo só particular","GEAP","CASSI","Bradesco Saúde","SulAmérica","Amil","Unimed","GDF Saúde/INAS","Plan Assiste (MPU)","E-vida","Notre Dame/Hapvida","PMDF","CBMDF","Postal Saúde","Fascal","Saúde Caixa","Omint","Porto Saúde","Outros (descrevo abaixo)"];
+const CONV = ["Atendo só particular","Unimed","Bradesco Saúde","SulAmérica","Amil","Hapvida/NotreDame","Porto Saúde","Omint","Cassi","GEAP","Saúde Caixa","Postal Saúde","Planos de servidores/autogestão","Planos estaduais/municipais","Outros (descrevo abaixo)"];
 
 const STEPS = [
  {t:"Você e a clínica", why:"Para falarmos certo com o paciente e com quem decide.", qs:[
@@ -81,10 +81,13 @@ const STEPS = [
   {row:[{id:"decisor",t:"Quem decide sobre marketing",type:"text",req:1,ph:"Nome"},{id:"decisor_whats",t:"WhatsApp de quem decide",type:"tel",req:1}]},
   {id:"email",t:"E-mail para relatórios",type:"email",req:1},
  ]},
- {t:"Onde você atende", why:"Define o raio dos anúncios: anunciar onde o paciente não vai é dinheiro perdido.", qs:[
-  {id:"unidades",t:"Unidades de atendimento",type:"textarea",req:1,h:"Uma por linha: nome · endereço/bairro · dias e horários",ph:"Clínica X · Asa Sul, SGAS 915 · seg e qua 8h-18h"},
-  {id:"regioes",t:"De quais regiões você QUER receber pacientes?",type:"chips",opts:REG,multi:1,req:1},
-  {id:"deslocamento",t:"Até quanto tempo o seu paciente costuma se deslocar?",type:"chips",opts:["Até 15 min","Até 30 min","Até 45 min","Vem de qualquer lugar do DF"],req:1},
+ {t:"Onde você atende e até onde quer chegar", why:"Define a área dos anúncios: começamos onde o paciente já vem e expandimos para onde faz sentido crescer.", qs:[
+  {row:[{id:"cidade",t:"Cidade principal",type:"text",req:1,ph:"Ex.: Brasília"},{id:"estado",t:"Estado (UF)",type:"text",req:1,ph:"Ex.: DF"}]},
+  {id:"unidades",t:"Unidades de atendimento",type:"textarea",req:1,h:"Uma por linha: nome · endereço/bairro · cidade · dias e horários",ph:"Clínica X · Asa Sul, SGAS 915 · Brasília · seg e qua 8h-18h"},
+  {id:"alcance",t:"Até onde você quer atrair pacientes?",type:"chips",opts:ALCANCE,multi:1,req:1,h:"Pode marcar mais de um: o que atende hoje e para onde quer crescer"},
+  {id:"regioes_prioritarias",t:"Bairros, cidades ou regiões prioritárias",type:"textarea",h:"De onde vem seu melhor paciente hoje? E onde quer crescer?",ph:"Ex.: Águas Claras, Taguatinga; quero crescer em Goiânia e Entorno"},
+  {id:"teleconsulta",t:"Atende por teleconsulta?",type:"chips",opts:["Sim","Só retorno","Não"]},
+  {id:"deslocamento",t:"Até quanto tempo o paciente costuma se deslocar até você?",type:"chips",opts:["Até 15 min","Até 30 min","Até 1 h","Viaja de outras cidades"],req:1},
  ]},
  {t:"O que você quer atrair", why:"É aqui que separamos campanhas e páginas por área — cada área tem custo e retorno diferentes.", qs:[
   {id:"areas",t:"Escolha até 3 áreas/procedimentos prioritários, na ordem de importância",type:"rank",opts:AREAS,max:3,req:1,h:"Clique na ordem: 1º, 2º, 3º"},
@@ -101,7 +104,7 @@ const STEPS = [
   {id:"idade",t:"Faixa etária predominante",type:"chips",opts:["18-30","30-45","45-60","60+"],multi:1},
   {id:"perfil",t:"Perfil mais comum",type:"chips",opts:["Esportistas","Trabalhador com dor/lesão","Idosos/artrose","Servidores públicos","Pós-cirúrgico/2ª opinião","Alta renda","Crianças/adolescentes"],multi:1},
   {id:"duvidas",t:"Quais as 3 perguntas que o paciente mais faz antes de agendar?",type:"textarea",ph:"Ex.: atende meu convênio? quanto custa? precisa de cirurgia?"},
-  {id:"diferenciais",t:"Por que os pacientes escolhem você e não outro ortopedista?",type:"textarea",req:1,h:"Formação, tempo de consulta, tecnologia, localização, resultados…"},
+  {id:"diferenciais",t:"Por que os pacientes escolhem você e não outro profissional da sua área?",type:"textarea",req:1,h:"Formação, tempo de consulta, tecnologia, localização, resultados…"},
   {id:"concorrentes",t:"Quem são seus concorrentes diretos na região?",type:"text"},
  ]},
  {t:"Agenda e metas", why:"Sem meta não existe 'bom resultado'. Daqui sai o custo máximo por paciente.", qs:[
